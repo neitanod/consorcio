@@ -1,0 +1,7 @@
+/* Cloak and preloader */
+
+[v-cloak] {display: none}
+[preloader] {display: none}
+[v-cloak][preloader] {display: block}
+
+/* */

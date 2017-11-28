@@ -1,5 +1,5 @@
 top.Bus = new Vue();
-top.app = new Vue({
+top.App = new Vue({
   el: '#app',
   data: {
     active_tab: ''
@@ -14,6 +14,23 @@ top.app = new Vue({
   }
 });
 
+var propietarios_controller = function(params){
+  App.active_tab = "propietarios";
+
+  var init_vue = function(){
+    var vue = new Vue(
+        {
+          el: "#propietarios-view",
+          data: {
+          },
+          methods: {
+          }
+        }
+    );
+  }
+
+  init_vue();
+}
 
 var depositos_controller = function(params){
 
@@ -86,6 +103,7 @@ var proveedores_controller = function(params){
 
 top.router = new NeekoRouter(
       {
+        'propietarios': propietarios_controller,
         'depositos': depositos_controller,
         'gastos': gastos_controller,
         'saldos': saldos_controller,

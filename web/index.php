@@ -12,16 +12,19 @@
     </head>
     <body>
 
-        <h1>Consorcio Piola</h1>
+        <h1><a class="nav-link router-load-view" href="#/home">Consorcio Piola</a></h1>
         <div id="app">
 
-            <div v-cloak preloader smooth-appear class="container-fluid" style="background-color: lightblue">
+            <div v-cloak preloader class="container-fluid">
                 <h1>LOADING...</h1>
             </div>
 
-            <div v-cloak smooth-appear>
+            <div v-cloak>
 
                 <ul class="nav nav-tabs justify-content-end">
+                    <li class="nav-item">
+                        <a class="nav-link router-load-view" href="#/propietarios">Propietarios</a>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link router-load-view" href="#/depositos">Depósitos</a>
                     </li>
@@ -36,29 +39,8 @@
                     </li>
                 </ul>
 
-                <div class="container-fluid router-view" style="background-color: lightblue">
-                    <p>{{ active_tab }}</p>
-                </div>
-                <div class="container">
-                <div class="row">
-                    <div class="col-2">
-                    1 of 2
-                    </div>
-                    <div class="col">
-                    2 of 2
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-1">
-                    1 of 3
-                    </div>
-                    <div class="col">
-                    2 of 3
-                    </div>
-                    <div class="col-1">
-                    3 of 3
-                    </div>
-                </div>
+                <div class="container-fluid router-view">
+
                 </div>
             </div>
 

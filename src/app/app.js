@@ -7,9 +7,9 @@ function clone(ob){
 GateDemo = function(){
     /* Demo data (private) */
     var demoholders =
-            [{"name": "Gerardo", "participation": 2800, "address": "a23124234fed", "deposits": 1100},
-             {"name": "Sebastián", "participation": 2800, "address": "b23124234fed", "deposits": 1000},
-             {"name": "Satoshi", "participation": 4300, "address": "c23124234fed", "deposits": 3000}];
+            [{"name": "Gerardo", "participation": 2800, "address": "0x8aac4851afc4079b712af706f41fffc0338e715e", "deposits": 1100},
+             {"name": "Sebastián", "participation": 2800, "address": "0x1afc4079b716f41fffc0338e715e8aac4852af70", "deposits": 1000},
+             {"name": "Satoshi", "participation": 4300, "address": "0x1f2af70ffc0338e715e8a6f4ac4851afc4079b71", "deposits": 3000}];
 
     /* Public Methods */
     var self = this;
@@ -45,7 +45,56 @@ GateDemo = function(){
     return this;
 };
 
+GateWeb3 = function(){
+    /* Public Methods */
+    var self = this;
+    this.addHolder = function(holder) {
+        console.log(JSON.stringify(holder));
+
+        return App.contractInstance().then(function(c){
+            c.addHolder(holder.name, holder.address, holder.participation);
+            data = self.isInitialized();
+        });
+
+    };
+    this.getHolder = function(index) {
+        return App.contractInstance().then(function(c){
+            return c.getHolder(index);
+        });
+    };
+    this.getHolderCount = function() {
+        return App.contractInstance().then(function(c){
+            return c.getHolderCount(index);
+        });
+    };
+    this.getHolders = function(index) {
+        var holders = [];
+        App.contractInstance().then(function(c){
+            return c.getHolderCount(index);
+        }).then(function(count){
+            for (i = 0; i < count; i++) {
+                /* @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ */
+                holders.push(Gate.getHolder(i));
+            }
+
+        });
+
+        return holders;
+    };
+    this.isInitialized = function() {
+        var total_participation = 0;
+        for(i in demoholders) {
+            total_participation += parseFloat(demoholders[i].participation);
+        }
+        console.log("Total participation:",total_participation);
+        if(total_participation>=10000) return true;
+        return false;
+    };
+    return this;
+};
+
 Gate = new GateDemo();
+// Gate = new GateWeb3();
 
 function init() {
 
@@ -76,7 +125,7 @@ function init() {
     View.active_tab = "propietarios";
 
     var init_vue = function(){
-        var newholder = {"name": "", "participation": 0, "address": ""};
+        var newholder = {"name": "", "participation": 0, "address": web3.eth.accounts[0]};
         var vue = new Vue(
             {
                 el: "#propietarios-view",

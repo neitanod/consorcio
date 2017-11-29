@@ -18,7 +18,7 @@ GateDemo = function(){
         holder.deposits = 0;
         demoholders.push(holder);
         data = self.isInitialized();
-        return {then: function(cb){setTimeout(function(){cb(data)},0);}}
+        return new Promise(function(resolve, reject){ resolve(data); });
     };
     this.getHolder = function(index) {
         return demoholders[index];
@@ -56,7 +56,7 @@ function init() {
     };
 
 
-    top.App = new Vue({
+    top.View = new Vue({
         el: '#app',
         data: {
             active_tab: '',
@@ -73,7 +73,7 @@ function init() {
     });
 
     var propietarios_controller = function(params){
-    App.active_tab = "propietarios";
+    View.active_tab = "propietarios";
 
     var init_vue = function(){
         var newholder = {"name": "", "participation": 0, "address": ""};
@@ -189,6 +189,67 @@ function init() {
         },
     jQuery);
 
+    Consortium = function() {
+        var self = this;
+
+        this.web3Provider = null;
+        this.contracts = {};
+
+        this.consortiumInstance = 'uninitialized';
+
+        this.initWeb3 = function() {
+            // Is there is an injected web3 instance?
+            if (typeof web3 !== 'undefined') {
+            self.web3Provider = web3.currentProvider;
+            } else {
+            // If no injected web3 instance is detected, fallback to the TestRPC
+            self.web3Provider = new Web3.providers.HttpProvider('http://localhost:8545');
+            }
+            web3 = new Web3(self.web3Provider);
+
+            return self.initContract();
+        }
+
+        this.initContract = function() {
+            $.getJSON('Consortium.json', function(data) {
+            // Get the necessary contract artifact file and instantiate it with truffle-contract
+            var ConsortiumArtifact = data;
+            self.contracts.Consortium = TruffleContract(ConsortiumArtifact);
+
+            // Set the provider for our contract
+            self.contracts.Consortium.setProvider(self.web3Provider);
+
+            return self.contractInstance();
+            });
+        }
+
+        this.contractInstance = function() {
+
+            if(self.consortiumInstance == "uninitialized") {
+                return self.contracts.Consortium.deployed().then(function(instance) {
+                    self.consortiumInstance = instance;
+                    return self.consortiumInstance;
+                });
+            } else {
+                return new Promise(function(resolve, reject){resolve(self.consortiumInstance);});
+            }
+
+        }
+
+        this.method = function(method, data) {
+            return this.contractInstance().then(function(ins){ return ins[method](data); });
+        }
+
+        this.call = function(method, data) {
+            return this.contractInstance().then(function(ins){ return ins[method].call(data); });
+        }
+
+        this.initWeb3();
+
+        return this;
+    }
+
+    top.App = new Consortium();
 }
 
 init(jQuery);

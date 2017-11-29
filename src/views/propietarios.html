@@ -1,3 +1,52 @@
 <div id="propietarios-view">
-    <h2>Propietarios</h2>
+    <div class="container">
+        <div class="container">
+            <h2>Propietarios</h2>
+            <div class="row" v-for="holder in holders">
+                <div class="col">
+                    {{ holder.name }}
+                </div>
+                <div class="col">
+                    {{ holder.participation/100 }}
+                </div>
+                <div class="col">
+                    {{ holder.address }}
+                </div>
+            </div>
+            <div class="row" v-if="!initialized && adding">
+                <div class="col">
+                    Nombre:
+                    <input type="form-control" v-model="newholder.name">
+                </div>
+                <div class="col">
+                    Participación:
+                    <input type="form-control" :value="newholder.participation/100" @input="newholder.participation = $event.target.value*100">
+                </div>
+                <div class="col">
+                    Address:
+                    <input type="form-control" v-model="newholder.address">
+                </div>
+                <div class="col">
+                    <button @click="add()">Guardar</button>
+                </div>
+            </div>
+            <div class="row" v-if="!initialized && !adding">
+                <div class="col">
+                    <button @click="adding=true">Agregar propietario</button>
+                </div>
+            </div>
+        </div>
+        <div class="container">
+        <div class="row alert-danger" v-if="initialized">
+            <div class="col">
+                El consorcio ya está en funcionamiento.  Sólo puede ver pero no editar la lista de propietarios.
+            </div>
+        </div>
+        <div class="row alert-warning" v-else>
+            <div class="col">
+                Puede agregar y modificar propietarios hasta que el consorcio se ponga en modo "Inicializado"
+            </div>
+        </div>
+        </div>
+    </div>
 </div>

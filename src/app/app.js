@@ -23,12 +23,12 @@ GateDemo = function(){
     this.getHolder = function(index) {
         return demoholders[index];
     };
-    this.getHolderCount = function() {
+    this.holderCount = function() {
         return demoholders.length;
     };
     this.getHolders = function(index) {
         var holders = [];
-        for (i = 0; i < Gate.getHolderCount(); i++) {
+        for (i = 0; i < Gate.holderCount(); i++) {
             holders.push(Gate.getHolder(i));
         }
         return holders;
@@ -62,48 +62,114 @@ GateWeb3 = function(){
             return c.getHolder(index);
         });
     };
-    this.getHolderCount = function() {
+    this.holderCount = function() {
         return App.contractInstance().then(function(c){
-            return c.getHolderCount(index);
+            return c.holderCount();
         });
     };
     this.getHolders = function(index) {
-        var holders = [];
-        App.contractInstance().then(function(c){
-            return c.getHolderCount(index);
-        }).then(function(count){
+        return self.holderCount().then(function(count) {
+            var promises = [];
+            var holders = [];
             for (i = 0; i < count; i++) {
-                /* @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ */
-                holders.push(Gate.getHolder(i));
+                promises.push(Gate.getHolder(i).then(function(holder){ holders.push(holder); }));
             }
-
+            return Promise.all(promises);
         });
 
-        return holders;
     };
     this.isInitialized = function() {
-        var total_participation = 0;
-        for(i in demoholders) {
-            total_participation += parseFloat(demoholders[i].participation);
-        }
-        console.log("Total participation:",total_participation);
-        if(total_participation>=10000) return true;
-        return false;
+        return App.contractInstance().then(function(c){
+            return c.isInitialized();
+        });
     };
     return this;
 };
 
-Gate = new GateDemo();
-// Gate = new GateWeb3();
+Consortium = function() {
+    var self = this;
+
+    this.web3Provider = null;
+    this.contracts = {};
+
+    this.consortiumInstance = 'uninitialized';
+
+    this.initWeb3 = function() {
+        // Is there is an injected web3 instance?
+        if (typeof web3 !== 'undefined') {
+        self.web3Provider = web3.currentProvider;
+        } else {
+        // If no injected web3 instance is detected, fallback to the TestRPC
+        self.web3Provider = new Web3.providers.HttpProvider('http://localhost:8545');
+        }
+        web3 = new Web3(self.web3Provider);
+
+        return self.initContract();
+    }
+
+    this.initContract = function() {
+
+        return new Promise(function(resolve, reject){
+            $.getJSON('Consortium.json', function(data) {
+            // Get the necessary contract artifact file and instantiate it with truffle-contract
+            var ConsortiumArtifact = data;
+            self.contracts.Consortium = TruffleContract(ConsortiumArtifact);
+
+            // Set the provider for our contract
+            self.contracts.Consortium.setProvider(self.web3Provider);
+
+            resolve(self.contractInstance());
+            });
+        });
+
+    }
+
+    this.contractInstance = function() {
+
+        if(self.consortiumInstance == "uninitialized") {
+            return self.contracts.Consortium.deployed().then(function(instance) {
+                self.consortiumInstance = instance;
+                return self.consortiumInstance;
+            });
+        } else {
+            return new Promise(function(resolve, reject){resolve(self.consortiumInstance);});
+        }
+
+    }
+
+    this.method = function(method, data) {
+        return this.contractInstance().then(function(ins){ return ins[method](data); });
+    }
+
+    this.call = function(method, data) {
+        return this.contractInstance().then(function(ins){ return ins[method].call(data); });
+    }
+
+    this.init = function() {
+        return this.initWeb3().then(function(){ return self; });
+    }
+
+    return this;
+};
+
+(new Consortium()).init()
+    .then(function(instance){ console.log("Contract instance: ", instance); top.App = instance; }).then(init);
 
 function init() {
 
+    console.log("top.App", top.App);
+
+    // top.Gate = new GateDemo();
+    top.Gate = new GateWeb3();
+
     var data =
     {
-        holders: Gate.getHolders(),
-        initialized: Gate.isInitialized()
+        holders: [],
+        initialized: false
     };
 
+    Gate.getHolders().then(function(holders){data.holders = holders});
+    Gate.isInitialized().then(function(initialized){data.initialized = initialized});
 
     top.View = new Vue({
         el: '#app',
@@ -141,8 +207,6 @@ function init() {
                         Gate.addHolder(this.newholder).then((function(){var nh = self.newholder; return function(ret){
                             data.initialized = ret;
                             self.initialized = ret;
-                            self.$forceUpdate();
-                            // self.initialized = ret;
                             console.log(ret);
                             self.holders.push(clone(nh));
                         };})());
@@ -237,68 +301,4 @@ function init() {
             'default': function(){ top.router.navigate_to('/home'); }
         },
     jQuery);
-
-    Consortium = function() {
-        var self = this;
-
-        this.web3Provider = null;
-        this.contracts = {};
-
-        this.consortiumInstance = 'uninitialized';
-
-        this.initWeb3 = function() {
-            // Is there is an injected web3 instance?
-            if (typeof web3 !== 'undefined') {
-            self.web3Provider = web3.currentProvider;
-            } else {
-            // If no injected web3 instance is detected, fallback to the TestRPC
-            self.web3Provider = new Web3.providers.HttpProvider('http://localhost:8545');
-            }
-            web3 = new Web3(self.web3Provider);
-
-            return self.initContract();
-        }
-
-        this.initContract = function() {
-            $.getJSON('Consortium.json', function(data) {
-            // Get the necessary contract artifact file and instantiate it with truffle-contract
-            var ConsortiumArtifact = data;
-            self.contracts.Consortium = TruffleContract(ConsortiumArtifact);
-
-            // Set the provider for our contract
-            self.contracts.Consortium.setProvider(self.web3Provider);
-
-            return self.contractInstance();
-            });
-        }
-
-        this.contractInstance = function() {
-
-            if(self.consortiumInstance == "uninitialized") {
-                return self.contracts.Consortium.deployed().then(function(instance) {
-                    self.consortiumInstance = instance;
-                    return self.consortiumInstance;
-                });
-            } else {
-                return new Promise(function(resolve, reject){resolve(self.consortiumInstance);});
-            }
-
-        }
-
-        this.method = function(method, data) {
-            return this.contractInstance().then(function(ins){ return ins[method](data); });
-        }
-
-        this.call = function(method, data) {
-            return this.contractInstance().then(function(ins){ return ins[method].call(data); });
-        }
-
-        this.initWeb3();
-
-        return this;
-    }
-
-    top.App = new Consortium();
 }
-
-init(jQuery);

@@ -77,7 +77,7 @@ contract Consortium {
     }
 
     modifier notExecuted(uint paymentId) {
-        require(payments[paymentId].executed);
+        require(!payments[paymentId].executed);
         _;
     }
 
@@ -144,7 +144,7 @@ contract Consortium {
     {
         confirmations[paymentId][msg.sender] = true;
         PaymentConfirmationVote(msg.sender, paymentId);
-        executePayment(paymentId);
+      //  executePayment(paymentId);
     }
 
     /// @dev Allows a holder to revoke a confirmation for a payment.
@@ -164,7 +164,6 @@ contract Consortium {
     function executePayment(uint paymentId)
         public
         onlyIfIsHolder
-        confirmed(paymentId, msg.sender)
         notExecuted(paymentId)
     {
         if (isConfirmed(paymentId)) {

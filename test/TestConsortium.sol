@@ -4,6 +4,7 @@ import "truffle/Assert.sol";
 import "truffle/DeployedAddresses.sol";
 import "../contracts/Consortium.sol";
 import "../contracts/TestUser.sol";
+import "./ThrowProxy.sol";
 
 contract TestConsortium {
     uint public initialBalance = 1 ether;
@@ -27,18 +28,17 @@ contract TestConsortium {
         Assert.equal(actual, expected, "Initialized should be false");
     }
 
-    function testShouldNotAcceptPaymentIfNotInitilized() public {
+    function testShouldNotAcceptFundingBeforeInitialized() public {
         Assert.isNotZero(user1.balance, "User1 should have balance.");
         Assert.isZero(consorcio.balance, "Balance should be zero.");
         
-        ThrowProxy throwProxy = new ThrowProxy(address(user1)); 
+        ThrowProxy throwProxy = new ThrowProxy(address(user1)); // http://truffleframework.com/tutorials/testing-for-throws-in-solidity-tests
         TestUser(address(throwProxy)).pay();
         
-        bool r = throwProxy.execute.gas(200000)();
-        Assert.isFalse(r, "Should be false, as it should throw");
+        bool success = throwProxy.execute.gas(200000)();
+        Assert.isFalse(success, "Should be false, as it should throw");
         Assert.isZero(consorcio.balance, "Balance should be zero."); //forced to check in onther
     }
-
 
     function testInitialization() public {
         bool expected = false;
@@ -54,33 +54,10 @@ contract TestConsortium {
         Assert.equal(consorcio.isInitialized(), expected, "Initialized should be true");
     }
 
-    function testPayment() public {
+    function testShouldAcceptFundingAfterInit() public {
         Assert.isNotZero(user1.balance, "User1 should have balance.");
         Assert.isZero(consorcio.balance, "Balance should be zero.");
         user1.pay();
         Assert.isNotZero(consorcio.balance, "Balance should not be zero."); //forced to check in onther
     }
-
-
 }
-
-
-contract ThrowProxy {
-  address public target;
-  bytes data;
-
-  function ThrowProxy(address _target) public {
-    target = _target;
-  }
-
-  //prime the data using the fallback function.
-  function() public {
-    data = msg.data;
-  }
-
-  function execute() public returns (bool) {
-    return target.call(data);
-  }
-}
-
-

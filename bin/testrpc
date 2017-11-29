@@ -1,2 +1,2 @@
 #!/bin/bash
-testrpc -s0x0
+testrpc -s0x0 --gasLimit 6721975 --gasPrice 100000000000

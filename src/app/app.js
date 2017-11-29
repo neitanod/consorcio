@@ -3,6 +3,9 @@ top.Bus = new Vue();
 function clone(ob){
     return JSON.parse(JSON.stringify(ob));
 }
+function gate(func, params){
+    return Gate[func](params).then(function(last){ top.last = last; console.log(last); });
+}
 
 GateDemo = function(){
     /* Demo data (private) */
@@ -68,13 +71,20 @@ GateWeb3 = function(){
         });
     };
     this.getHolders = function(index) {
-        return self.holderCount().then(function(count) {
+        return self.holderCount().then(function(response) {
+            var count = response.toNumber();
             var promises = [];
             var holders = [];
             for (i = 0; i < count; i++) {
-                promises.push(Gate.getHolder(i).then(function(holder){ holders.push(holder); }));
+                promises.push(Gate.getHolder(i));
             }
-            return Promise.all(promises);
+            return Promise.all(promises).then(function(values){
+                var holders = [];
+                for(i in values) {
+                    holders.push({name: values[i][0], address: values[i][1], participation: values[i][2].toNumber()});
+                }
+                return holders;
+            });
         });
 
     };
@@ -162,14 +172,19 @@ function init() {
     // top.Gate = new GateDemo();
     top.Gate = new GateWeb3();
 
-    var data =
-    {
+    var data = {
         holders: [],
         initialized: false
     };
+    var retrieving = [
+        Gate.getHolders().then(function(holders){data.holders = holders; console.log(JSON.stringify(holders));}),
+        Gate.isInitialized().then(function(initialized){data.initialized = initialized})
+    ];
 
-    Gate.getHolders().then(function(holders){data.holders = holders});
-    Gate.isInitialized().then(function(initialized){data.initialized = initialized});
+    Promise.all( retrieving ).then(function(){ startInterface(data); });
+}
+
+function startInterface(data) {
 
     top.View = new Vue({
         el: '#app',

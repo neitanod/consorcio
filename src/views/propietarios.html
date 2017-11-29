@@ -1,6 +1,18 @@
 <div id="propietarios-view">
     <div class="container">
         <div class="container">
+            <div class="row alert-danger" v-if="initialized">
+                <div class="col">
+                    El consorcio ya está en funcionamiento.  Sólo puede ver pero no editar la lista de propietarios.
+                </div>
+            </div>
+            <div class="row alert-warning" v-else>
+                <div class="col">
+                    Puede agregar y modificar propietarios hasta que el consorcio se ponga en modo "Inicializado"
+                </div>
+            </div>
+        </div>
+        <div class="container">
             <h2>Propietarios</h2>
             <div class="row" v-for="holder in holders">
                 <div class="col">
@@ -35,18 +47,6 @@
                     <button @click="adding=true">Agregar propietario</button>
                 </div>
             </div>
-        </div>
-        <div class="container">
-        <div class="row alert-danger" v-if="initialized">
-            <div class="col">
-                El consorcio ya está en funcionamiento.  Sólo puede ver pero no editar la lista de propietarios.
-            </div>
-        </div>
-        <div class="row alert-warning" v-else>
-            <div class="col">
-                Puede agregar y modificar propietarios hasta que el consorcio se ponga en modo "Inicializado"
-            </div>
-        </div>
         </div>
     </div>
 </div>

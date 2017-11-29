@@ -24,6 +24,7 @@ contract Consortium {
     bool public isInitialized=false;
     uint public holderCount=0;
     uint totalParticipation=0;
+    uint public totalHoldersDepositedAmount=0;
 
     // holders
     address[] holderAccounts;
@@ -114,7 +115,8 @@ contract Consortium {
 
     function submitPayment(address destination, uint value, string name)
         public
-        onlyAfterInitialization onlyIfIsHolder
+        onlyAfterInitialization 
+        onlyIfIsHolder
         returns (uint paymentId)
     {
         require(destination!=0);
@@ -131,12 +133,76 @@ contract Consortium {
         PaymentSubmission(holderNames[msg.sender], name, destination, value);
     }
 
+    
+    /// @dev Allows an owner to confirm a payment.
+    /// @param paymentId Payment ID.
+    function confirmPayment(uint paymentId)
+        public
+        onlyIfIsHolder
+        paymentExists(paymentId)
+        notConfirmed(paymentId, msg.sender)
+    {
+        confirmations[paymentId][msg.sender] = true;
+        PaymentConfirmationVote(msg.sender, paymentId);
+        executePayment(paymentId);
+    }
+
+    /// @dev Allows a holder to revoke a confirmation for a payment.
+    /// @param paymentId Payment ID.
+    function revokeConfirmation(uint paymentId)
+        public
+        onlyIfIsHolder
+        confirmed(paymentId, msg.sender)
+        notExecuted(paymentId)
+    {
+        confirmations[paymentId][msg.sender] = false;
+        PaymentRevocationVote(msg.sender, paymentId);
+    }
+
+    /// @dev Allows any holder to execute a confirmed payment.
+    /// @param paymentId Payment ID.
+    function executePayment(uint paymentId)
+        public
+        onlyIfIsHolder
+        confirmed(paymentId, msg.sender)
+        notExecuted(paymentId)
+    {
+        if (isConfirmed(paymentId)) {
+            Payment storage py = payments[paymentId];
+            py.executed = true;
+            if (py.destination.call.value(py.value)())
+                PaymentExecution(paymentId);
+            else {
+                PaymentExecutionFailure(paymentId);
+                py.executed = false;
+            }
+        }
+    }
+
+    /// @dev Returns the confirmation status of a payment.
+    /// @param paymentId Payment ID.
+    /// @return Confirmation status.
+    function isConfirmed(uint paymentId)
+        public
+        constant
+        returns (bool)
+    {
+        uint count = 0;
+        for (uint i = 0; i<holderCount; i++) {
+            if (confirmations[paymentId][holderAccounts[i]])
+                count += holderParticipations[holderAccounts[i]];
+            if (count >= requiredVotes)
+                return true;
+        }
+    }
+
     /* Fallback */    
     function() payable onlyAfterInitialization public {
         if (msg.value > 0) {
             if (isHolder(msg.sender)) {
                 var name = holderNames[msg.sender];
                 holderDeposits[msg.sender] += msg.value; // holder deposit accountability
+                totalHoldersDepositedAmount += msg.value;
                 HolderDeposit(name, msg.value); // Log External Event
             } else {
                 ExternalDeposit(msg.sender, msg.value);

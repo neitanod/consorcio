@@ -1,9 +1,8 @@
 pragma solidity ^0.4.11;
 
-import "./Consortium.sol";
+import "../Contracts/Consortium.sol";
 
 contract TestUser {
-    uint public initialBalance = 1 ether;
 
     Consortium consorcio;
     
@@ -11,8 +10,8 @@ contract TestUser {
         consorcio = Consortium(_address);
     }
 
-    function pay() public {
-        consorcio.transfer(10);
+    function pay(uint amount) public {
+        consorcio.transfer(amount);
     }
 
     function() payable public {}

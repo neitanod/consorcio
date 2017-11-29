@@ -77,14 +77,13 @@ contract Consortium {
     }
 
     /* Fallback */    
-    function Deposit() payable public onlyAfterInitialization {
+    function() payable public onlyAfterInitialization {
         if (msg.value > 0) {
             if (isHolder(msg.sender)) {
                 var name = holderNames[msg.sender];
                 holderDeposits[msg.sender] += msg.value; // holder deposit accountability
                 HolderDeposit(name, msg.value); // Log External Event
-            }
-            else {
+            } else {
                 ExternalDeposit(msg.sender, msg.value);
             }
         }

@@ -15,17 +15,26 @@ contract TestUser {
     }
 
     function pay(uint amount) public {
-        //consorcio.call.value(100).gas(1000)();
         //consorcio.transfer(amount)(); // dos horas perdidas por el estipendio de gas...
+        //consorcio.call.value(100).gas(1000)();
         require(consorcio.call.value(amount)() );
 
     }
 
-    function voteYes(uint id) public {
-        //consorcio.call.value(100).gas(1000)();
-        //consorcio.transfer(amount)(); // dos horas perdidas por el estipendio de gas...
+    function confirmPayment(uint id) public {
         consorcio.confirmPayment(id);
     }
+	
+    function submitPayment(address payTo, uint amount, string name) public returns (uint) {
+        return consorcio.submitPayment(payTo, amount, name);
+    }
+		
+        
+    function executePayment(uint paymentId)
+        public
+    {
+        consorcio.executePayment(paymentId);
+    }        
 
     function() payable public {} 
 }

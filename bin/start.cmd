@@ -1,5 +1,5 @@
 pushd %~dp0\..
-start testrpc -s0x0 --gasLimit 672197500 --gasPrice 100000000000
+start ganache-cli -s0 --gasLimit 672197500 --gasPrice 100000
 call truffle migrate
 npm run dev
 

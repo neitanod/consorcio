@@ -25,6 +25,7 @@ contract Consortium {
     uint public holderCount=0;
     uint totalParticipation=0;
     uint public totalHoldersDepositedAmount=0;
+	address owner;
 
     // holders
     address[] holderAccounts;
@@ -45,6 +46,11 @@ contract Consortium {
     
     /* Modifiers */    
     
+	modifier onlyOwner {
+        require(msg.sender==owner);
+        _;
+    }
+	
     modifier onlyDuringInitialization {
         require(isInitialized==false);
         _;
@@ -87,14 +93,14 @@ contract Consortium {
         
         requiredVotes = _requiredVotes;
         isInitialized = false;
+		owner=msg.sender;
     }
     
     /* Public Functions */
     
     function addHolder(string name, address account, uint participation)  
-        public onlyDuringInitialization returns (bool initializationComplete) 
-        {
-        
+        public onlyDuringInitialization onlyOwner returns (bool initializationComplete) 
+        {        
         require(participation>0);
         require(totalParticipation+participation<=MAX_PARTICIPATION);
         require(holderCount<MAX_OWNER_COUNT);

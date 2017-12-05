@@ -1,4 +1,8 @@
+/* Bus global */
+
 top.Bus = new Vue();
+
+/* Helpers */
 
 function clone(ob){
     return JSON.parse(JSON.stringify(ob));
@@ -7,46 +11,7 @@ function gate(func, params){
     return Gate[func](params).then(function(last){ top.last = last; console.log(last); });
 }
 
-GateDemo = function(){
-    /* Demo data (private) */
-    var demoholders =
-            [{"name": "Gerardo", "participation": 2800, "address": "0x8aac4851afc4079b712af706f41fffc0338e715e", "deposits": 1100},
-             {"name": "Sebastián", "participation": 2800, "address": "0x1afc4079b716f41fffc0338e715e8aac4852af70", "deposits": 1000},
-             {"name": "Satoshi", "participation": 4300, "address": "0x1f2af70ffc0338e715e8a6f4ac4851afc4079b71", "deposits": 3000}];
-
-    /* Public Methods */
-    var self = this;
-    this.addHolder = function(holder) {
-        console.log(JSON.stringify(holder));
-        holder.deposits = 0;
-        demoholders.push(holder);
-        data = self.isInitialized();
-        return new Promise(function(resolve, reject){ resolve(data); });
-    };
-    this.getHolder = function(index) {
-        return demoholders[index];
-    };
-    this.holderCount = function() {
-        return demoholders.length;
-    };
-    this.getHolders = function(index) {
-        var holders = [];
-        for (i = 0; i < Gate.holderCount(); i++) {
-            holders.push(Gate.getHolder(i));
-        }
-        return holders;
-    };
-    this.isInitialized = function() {
-        var total_participation = 0;
-        for(i in demoholders) {
-            total_participation += parseFloat(demoholders[i].participation);
-        }
-        console.log("Total participation:",total_participation);
-        if(total_participation>=10000) return true;
-        return false;
-    };
-    return this;
-};
+/* Web3 API */
 
 GateWeb3 = function(){
     /* Public Methods */
@@ -95,6 +60,52 @@ GateWeb3 = function(){
     };
     return this;
 };
+
+/* Fake Test API */
+
+GateFake = function(){
+    /* Demo data (private) */
+    var demoholders =
+            [{"name": "Gerardo", "participation": 2800, "address": "0x8aac4851afc4079b712af706f41fffc0338e715e", "deposits": 1100},
+             {"name": "Sebastián", "participation": 2800, "address": "0x1afc4079b716f41fffc0338e715e8aac4852af70", "deposits": 1000},
+             {"name": "Satoshi", "participation": 4300, "address": "0x1f2af70ffc0338e715e8a6f4ac4851afc4079b71", "deposits": 3000}];
+
+    /* Public Methods */
+    var self = this;
+    this.addHolder = function(holder) {
+        console.log(JSON.stringify(holder));
+        holder.deposits = 0;
+        demoholders.push(holder);
+        data = self.isInitialized();
+        return new Promise(function(resolve, reject){ resolve(data); });
+    };
+    this.getHolder = function(index) {
+        return demoholders[index];
+    };
+    this.holderCount = function() {
+        return demoholders.length;
+    };
+    this.getHolders = function(index) {
+        var holders = [];
+        for (i = 0; i < Gate.holderCount(); i++) {
+            holders.push(Gate.getHolder(i));
+        }
+        return holders;
+    };
+    this.isInitialized = function() {
+        var total_participation = 0;
+        for(i in demoholders) {
+            total_participation += parseFloat(demoholders[i].participation);
+        }
+        console.log("Total participation:",total_participation);
+        if(total_participation>=10000) return true;
+        return false;
+    };
+    return this;
+};
+
+
+/* Contrato */
 
 Consortium = function() {
     var self = this;
@@ -162,14 +173,18 @@ Consortium = function() {
     return this;
 };
 
+/* Bootstrap */
+
+// Obtenemos la instancia del contrato
+
 (new Consortium()).init()
     .then(function(instance){ console.log("Contract instance: ", instance); top.App = instance; }).then(init);
 
+// Inicializamos storage
+
 function init() {
 
-    console.log("top.App", top.App);
-
-    // top.Gate = new GateDemo();
+    // top.Gate = new GateFake();
     top.Gate = new GateWeb3();
 
     var data = {
@@ -183,6 +198,8 @@ function init() {
 
     Promise.all( retrieving ).then(function(){ startInterface(data); });
 }
+
+// Inicializamos interfaz
 
 function startInterface(data) {
 
